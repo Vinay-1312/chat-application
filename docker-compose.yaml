@@ -1,0 +1,37 @@
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.29-latest
+    container_name: envoy
+    ports:
+      - "10000:10000"  # proxy port
+      - "9901:9901"    # admin dashboard
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    networks:
+      - envoymesh
+    depends_on:
+      - service1
+      - service2
+      - service3
+
+  service1:
+    image: nginx:alpine
+    container_name: chat-node-1
+    networks:
+      - envoymesh
+
+  service2:
+    image: nginx:alpine
+    container_name: chat-node-2
+    networks:
+      - envoymesh
+
+  service3:
+    image: nginx:alpine
+    container_name: chat-node-3
+    networks:
+      - envoymesh
+
+networks:
+  envoymesh:
+    driver: bridge

@@ -1,0 +1,62 @@
+static_resources:
+  listeners:
+    - name: listener_0
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 10000 }
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress_http
+                upgrade_configs:
+                  - upgrade_type: websocket   # required for chat WebSocket connections
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: backend
+                      domains: ["*"]
+                      response_headers_to_add:
+                        - header:
+                            key: x-served-by
+                            value: "%UPSTREAM_HOST%"    # shows which node handled the request
+                      routes:
+                        - match: { prefix: "/" }
+                          route:
+                            cluster: chat_service
+                            hash_policy:
+                              - header:
+                                  header_name: x-user-id   # primary: hash on user ID
+                              - cookie:
+                                  name: session_id         # fallback: session cookie
+                                  ttl: 0s
+                http_filters:
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+    - name: chat_service
+      connect_timeout: 0.25s
+      type: STRICT_DNS
+      lb_policy: RING_HASH
+      ring_hash_lb_config:
+        minimum_ring_size: 1024
+        maximum_ring_size: 8388608
+      load_assignment:
+        cluster_name: chat_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: service1, port_value: 80 }
+              - endpoint:
+                  address:
+                    socket_address: { address: service2, port_value: 80 }
+              - endpoint:
+                  address:
+                    socket_address: { address: service3, port_value: 80 }
+
+admin:
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }
