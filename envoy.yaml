@@ -49,13 +49,13 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
-                    socket_address: { address: service1, port_value: 80 }
+                    socket_address: { address: service1, port_value: 3000 }
               - endpoint:
                   address:
-                    socket_address: { address: service2, port_value: 80 }
+                    socket_address: { address: service2, port_value: 3000 }
               - endpoint:
                   address:
-                    socket_address: { address: service3, port_value: 80 }
+                    socket_address: { address: service3, port_value: 3000 }
 
 admin:
   address:
