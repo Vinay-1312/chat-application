@@ -10,8 +10,19 @@ export default function Chat({ user, onLogout }) {
 
   useEffect(() => {
     loadConversations()
-    getSocket()
-    return () => disconnectSocket()
+    const socket = getSocket()
+
+    // fired when another user adds us to a direct or group conversation
+    socket.on('new_conversation', (conv) => {
+      console.log('[Chat] new_conversation received — conversationId:', conv.id)
+      setConversations(prev => prev.find(c => c.id === conv.id) ? prev : [conv, ...prev])
+      socket.emit('join_conversation', { conversationId: conv.id })
+    })
+
+    return () => {
+      socket.off('new_conversation')
+      disconnectSocket()
+    }
   }, [])
 
   const loadConversations = async () => {

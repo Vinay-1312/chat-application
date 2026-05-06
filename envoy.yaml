@@ -16,6 +16,14 @@ static_resources:
                   virtual_hosts:
                     - name: backend
                       domains: ["*"]
+                      cors:
+                        allow_origin_string_match:
+                          - safe_regex:
+                              regex: ".*"
+                        allow_methods: "GET, POST, PUT, DELETE, OPTIONS"
+                        allow_headers: "authorization, content-type, x-user-id"
+                        expose_headers: "x-served-by"
+                        max_age: "86400"
                       response_headers_to_add:
                         - header:
                             key: x-served-by
@@ -31,6 +39,9 @@ static_resources:
                                   name: session_id         # fallback: session cookie
                                   ttl: 0s
                 http_filters:
+                  - name: envoy.filters.http.cors
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
