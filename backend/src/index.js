@@ -3,6 +3,7 @@ const http = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
 const { setupSocket } = require('./socket')
+const { startStreamConsumer } = require('./streamConsumer')
 
 const app = express()
 const server = http.createServer(app)
@@ -30,4 +31,7 @@ console.log('[SERVER] Initializing Socket.io handler')
 setupSocket(io)
 
 const PORT = process.env.PORT || 3000
-server.listen(PORT, () => console.log(`[SERVER] Chat service running on port ${PORT}`))
+server.listen(PORT, () => {
+  console.log(`[SERVER] Chat service running on port ${PORT}`)
+  startStreamConsumer().catch(err => console.error('[SERVER] Stream consumer failed to start:', err.message))
+})

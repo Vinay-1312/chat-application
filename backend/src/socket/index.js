@@ -114,14 +114,9 @@ function setupSocket(io) {
           'INSERT INTO messages (conversation_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
           [conversationId, socket.user.id, content]
         )
-        const message = {
-          ...result.rows[0],
-          sender_id: socket.user.id,
-          sender_username: socket.user.username
-        }
-
-        console.log(`[SOCKET] Message saved to DB — messageId=${message.id}, publishing to Redis channel="room:${conversationId}"`)
-        pub.publish(`room:${conversationId}`, JSON.stringify(message))
+        // Debezium reads this INSERT from Postgres WAL and publishes to Redis Stream.
+        // streamConsumer.js picks it up and calls pub.publish() — no direct publish here.
+        console.log(`[SOCKET] Message saved to DB — messageId=${result.rows[0].id}, Debezium will publish to Redis`)
       } catch (err) {
         console.error('[SOCKET] send_message error:', err.message)
       }

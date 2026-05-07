@@ -31,3 +31,18 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_members_user ON members(user_id);
+
+-- Debezium uses this publication to know which tables to stream
+CREATE PUBLICATION debezium_pub FOR TABLE messages;
+
+CREATE TABLE IF NOT EXISTS outbox_events (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  channel      TEXT NOT NULL,
+  payload      JSONB NOT NULL,
+  created_at   TIMESTAMP DEFAULT NOW(),
+  published_at TIMESTAMP
+);
+
+-- partial index: only unpublished rows — keeps the worker query fast
+CREATE INDEX IF NOT EXISTS idx_outbox_unpublished ON outbox_events(created_at)
+  WHERE published_at IS NULL;

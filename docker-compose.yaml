@@ -68,6 +68,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres
+    # wal_level=logical is required for Debezium CDC
+    command: postgres -c wal_level=logical
     environment:
       - POSTGRES_DB=chatdb
       - POSTGRES_USER=chat
@@ -75,6 +77,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - envoymesh
+
+  debezium:
+    image: debezium/server:2.5
+    container_name: debezium
+    volumes:
+      - ./debezium/application.properties:/debezium/conf/application.properties
+    depends_on:
+      - postgres
+      - redis
     networks:
       - envoymesh
 
