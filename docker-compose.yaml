@@ -81,10 +81,12 @@ services:
       - envoymesh
 
   debezium:
-    image: debezium/server:2.5
+    image: debezium/server:2.7.3.Final
     container_name: debezium
+    platform: linux/amd64
     volumes:
-      - ./debezium/application.properties:/debezium/conf/application.properties
+      - ./debezium/conf/application.properties:/debezium/conf/application.properties
+      - ./debezium/data:/data
     depends_on:
       - postgres
       - redis

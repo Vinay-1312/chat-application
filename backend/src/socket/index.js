@@ -17,6 +17,7 @@ sub.on('message', (channel, data) => {
     const userId = channel.slice(5)
     const socketIds = userSockets.get(userId)
     if (!socketIds) return
+    console.log('userSockets:', userSockets)
     const { event, payload } = JSON.parse(data)
     console.log(`[SOCKET] Redis user-event "${event}" on channel="${channel}" — delivering to ${socketIds.size} local socket(s)`)
     socketIds.forEach(socketId => {
