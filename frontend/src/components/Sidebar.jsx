@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import NewConversationModal from './NewConversationModal'
 
-export default function Sidebar({ user, conversations, activeId, onSelect, onNewConversation, onLogout }) {
+export default function Sidebar({ user, conversations, activeId, onSelect, onNewConversation, onLogout, onlineUsers = new Set() }) {
   const [showModal, setShowModal] = useState(false)
 
   return (
@@ -20,13 +20,17 @@ export default function Sidebar({ user, conversations, activeId, onSelect, onNew
         )}
         {conversations.map(conv => {
           const title = conv.type === 'group' ? conv.name : conv.other_username
+          const isOnline = conv.type === 'direct' && onlineUsers.has(conv.other_user_id)
           return (
             <div
               key={conv.id}
               style={{ ...s.item, ...(activeId === conv.id ? s.itemActive : {}) }}
               onClick={() => onSelect(conv)}
             >
-              <div style={s.avatar}>{(title || '?')[0].toUpperCase()}</div>
+              <div style={s.avatarWrap}>
+                <div style={s.avatar}>{(title || '?')[0].toUpperCase()}</div>
+                {isOnline && <span style={s.onlineDot} />}
+              </div>
               <div style={s.itemBody}>
                 <div style={s.itemTitle}>{title}</div>
                 <div style={s.itemPreview}>{conv.last_message || 'No messages yet'}</div>
@@ -56,7 +60,9 @@ const s = {
   empty: { padding: '2rem 1rem', textAlign: 'center', color: '#aaa', fontSize: '13px' },
   item: { display: 'flex', alignItems: 'center', padding: '12px 14px', cursor: 'pointer', gap: '10px', borderBottom: '1px solid #f0f0f0' },
   itemActive: { background: '#e8f0fe' },
-  avatar: { width: '38px', height: '38px', borderRadius: '50%', background: '#0084ff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '15px', flexShrink: 0 },
+  avatarWrap: { position: 'relative', flexShrink: 0 },
+  avatar: { width: '38px', height: '38px', borderRadius: '50%', background: '#0084ff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '15px' },
+  onlineDot: { position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', border: '2px solid #fafafa' },
   itemBody: { flex: 1, overflow: 'hidden' },
   itemTitle: { fontWeight: '500', fontSize: '14px', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   itemPreview: { fontSize: '12px', color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },

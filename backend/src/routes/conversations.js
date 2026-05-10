@@ -23,7 +23,13 @@ router.get('/', authMiddleware, async (req, res) => {
           JOIN members m2 ON m2.user_id = u.id
           WHERE m2.conversation_id = c.id AND u.id != $1
           LIMIT 1
-        ) AS other_username
+        ) AS other_username,
+        (
+          SELECT u.id FROM users u
+          JOIN members m2 ON m2.user_id = u.id
+          WHERE m2.conversation_id = c.id AND u.id != $1
+          LIMIT 1
+        ) AS other_user_id
       FROM conversations c
       JOIN members m ON m.conversation_id = c.id
       WHERE m.user_id = $1

@@ -7,20 +7,35 @@ import api from '../api'
 export default function Chat({ user, onLogout }) {
   const [conversations, setConversations] = useState([])
   const [active, setActive] = useState(null)
+  const [onlineUsers, setOnlineUsers] = useState(new Set())
 
   useEffect(() => {
     loadConversations()
     const socket = getSocket()
 
-    // fired when another user adds us to a direct or group conversation
     socket.on('new_conversation', (conv) => {
       console.log('[Chat] new_conversation received — conversationId:', conv.id)
       setConversations(prev => prev.find(c => c.id === conv.id) ? prev : [conv, ...prev])
       socket.emit('join_conversation', { conversationId: conv.id })
     })
 
+    socket.on('user_online', ({ userId }) => {
+      setOnlineUsers(prev => new Set([...prev, userId]))
+    })
+
+    socket.on('user_offline', ({ userId }) => {
+      setOnlineUsers(prev => { const next = new Set(prev); next.delete(userId); return next })
+    })
+
+    socket.on('presence_snapshot', ({ onlineUsers: ids }) => {
+      setOnlineUsers(new Set(ids))
+    })
+
     return () => {
       socket.off('new_conversation')
+      socket.off('user_online')
+      socket.off('user_offline')
+      socket.off('presence_snapshot')
       disconnectSocket()
     }
   }, [])
@@ -52,6 +67,7 @@ export default function Chat({ user, onLogout }) {
         onSelect={setActive}
         onNewConversation={handleNewConversation}
         onLogout={onLogout}
+        onlineUsers={onlineUsers}
       />
       {active
         ? <ChatWindow key={active.id} conversation={active} user={user} onMessage={handleLastMessage} />
